@@ -129,4 +129,4 @@ It takes a few seconds for the GIBS server to reply to the GetTileService reques
 ```
 gdal_translate -of WMS -sds -oo StoreConfiguration=yes -oo TiledGroupName="infrared" -oo Change=time:2019-10-21 "https://gibs.earthdata.nasa.gov/twms/epsg4326/best/twms.cgi?request=GetTileService" Infrared.tWMS
 ```
-The generated files are a lot larger because they contain the XML encoded response to the GetTileService. But they might work faster, because the file does not have to be retrieved from the server when opening the file.
+The generated files are a lot larger because they contain the XML encoded response to the GetTileService. But they might work faster, because the GetTileService information does not have to be retrieved from the server when opening the file.
