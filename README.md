@@ -13,7 +13,16 @@ One of these WMS-minidrivers is TiledWMS (tWMS), which is a tiled extension for 
 ## List of available datasets
 
 TiledWMS adds a *GetTileService* call to the OGC WMS, the XML document returned is what contains all the information needed to configure and connect to any dataset. As documented by the GIBS API page, the GIBS server URL for this request is [https://gibs.earthdata.nasa.gov/twms/epsg4326/best/twms.cgi?request=GetTileService](https://gibs.earthdata.nasa.gov/twms/epsg4326/best/twms.cgi?request=GetTileService)  
-This URL can be used to get a list of available datasets:
+This URL can be used by gdalinfo to get a list of available datasets:
 ```
 gdalinfo https://gibs.earthdata.nasa.gov/twms/epsg4326/best/twms.cgi?request=GetTileService
 ```
+It takes a few seconds and a lot of output will be generated. This is the output from the WMSMetaDriver, which recognized the response and parsed it. The dataset itself is just a placeholder, the real output is in the metadata, which exposes all the datasets available on the server as GDAL subdatasets. There are close to one thousand different datasets available on that server. Each one will get a *SUBDATASET_\<N>_NAME* and a *SUBDATASET_\<N>_DESC*, where \<N> is the subdataset number. The SUBDATASET_NAME is picked right out of the GetTileService response and should be a readable, informative description of the respective dataset. Let's pick subdataset 479 and take a closer look:
+```
+gdalinfo https://gibs.earthdata.nasa.gov/twms/epsg4326/best/twms.cgi?request=GetTileService |grep 479
+```
+Currently, the output will be:
+```
+  SUBDATASET_479_NAME=<GDAL_WMS><Service name="TiledWMS"><ServerUrl>https://gibs.earthdata.nasa.gov/twms/epsg4326/best/twms.cgi?</ServerUrl><TiledGroupName>MODIS Terra CorrectedReflectance TrueColor tileset</TiledGroupName></Service></GDAL_WMS>
+  SUBDATASET_479_DESC=Corrected Reflectance (True Color, MODIS, Terra)
+ ```
