@@ -21,7 +21,7 @@ This URL can be used by gdalinfo to get a list of available datasets:
 ```
   gdalinfo "https://gibs.earthdata.nasa.gov/twms/epsg4326/best/twms.cgi?request=GetTileService"
 ```
-It takes a few seconds and a lot of output will be generated. This is the output from the WMSMetaDriver, which recognized the response and parsed it. The dataset itself is just a placeholder, the real output is in the metadata, which exposes all the datasets available on the server as GDAL subdatasets. There are close to one thousand different datasets available on that server. Each one will get a *SUBDATASET_\<N>_NAME* and a *SUBDATASET_\<N>_DESC*, where \<N> is the subdataset number. The SUBDATASET_NAME is picked right out of the GetTileService response and should be a readable, informative description of the respective dataset. Let's pick subdataset 479 and take a closer look:
+It takes a few seconds and a lot of output will be generated. This is the output from the WMSMetaDriver, which recognized the response and parsed it. The dataset itself is just a placeholder, the real output is in the metadata, which exposes all the datasets available on the server as GDAL subdatasets. There are close to one thousand different datasets available on that server. Each one will get a **SUBDATASET_\<N>_NAME** and a **SUBDATASET_\<N>_DESC**, where \<N> is the subdataset number. The **SUBDATASET_NAME** is picked right out of the GetTileService response and should be a readable, informative description of the respective dataset. Let's pick subdataset 479 and take a closer look:
 ```
   gdalinfo "https://gibs.earthdata.nasa.gov/twms/epsg4326/best/twms.cgi?request=GetTileService" |grep 479
 ```
@@ -55,7 +55,7 @@ Now that we have a handle, getting the data is easy with gdal_translate:
 ```
   gdal_translate -of JPEG -outsize 2560 1280 MODIS_TERRA.xml MODIS_TERRA.jpg
 ```
-It takes a few seconds and it's done. The parameters ask for the output to be a JPEG image and set the output size in pixels. The full resolution is too large to be saved in a single JPEG and would take a long time. The output image should look right, but will always have a large black area. That is because the default time is *now*, which in the MODIS case it means *today*. And since data for today is still being generated, only a part of the world will have data.
+It takes a few seconds and it's done. The parameters ask for the output to be a JPEG image and set the output size in pixels. The full resolution is too large to be saved in a single JPEG and would take a long time. The output image should look right, but will always have a large black area. That is because the default time is ***now***, which in the MODIS case it means ***today***. And since data for today is still being generated, only a part of the world will have data.
 
 ## Choose the date
 
