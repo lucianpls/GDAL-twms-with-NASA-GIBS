@@ -44,7 +44,7 @@ The content of the SUBDATASET_\<N>_NAME is the XML that we are looking for. We c
   gdalinfo MODIS_TERRA.xml
 ```
 
-The string can be used directly as a handle, the result will be the same:
+The XML string itself can be used as a handle , the result will be the same:
 ```
   gdalinfo '<GDAL_WMS><Service name="TiledWMS"><ServerUrl>https://gibs.earthdata.nasa.gov/twms/epsg4326/best/twms.cgi?</ServerUrl><TiledGroupName>MODIS Terra CorrectedReflectance TrueColor tileset</TiledGroupName></Service></GDAL_WMS>'
 ```
