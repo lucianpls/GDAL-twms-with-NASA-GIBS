@@ -65,7 +65,7 @@ GIBS specializes in providing temporal data. MODIS Terra has been operational fo
   gdal_translate -of JPEG -outsize 2560 1280 -oo Change=time:2020-02-05 MODIS_TERRA.xml MODIS_T_Feb_05_2020.jpg
 ```
 That is pretty simple, right? The -oo means OpenOption, a way to pass a string to the tWMS driver. This will only work with *time*, because it has to match what the server can handle. Otherwise an error will occur. If a date in the future is requested, an empty image will be generated, since no data is available.
-So we get a pretty picture, but how do we open a specific day in a GIS application, for example in Esri's ArcPro?
+So we get a pretty picture, but how do we open a specific day in a GIS application, for example in Esri's ArcPro, without copying the pixel data to the client system?
 
 ## Save the date
 
