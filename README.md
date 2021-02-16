@@ -32,10 +32,87 @@ gdalinfo -sd 479 "https://gibs.earthdata.nasa.gov/twms/epsg4326/best/twms.cgi?re
 ```
 The output looks like a real raster. It shows the size (16384x81920 pixel), location (global), RGB and multiple resolutions.
  
-## Geting a handle to the raster
+## Geting a handle to a single dataset
 
-The content of the SUBDATASET_\<N>_NAME is the XML that we are looking for. We can save it into a file and check:
+The content of the SUBDATASET_\<N>_NAME is the XML that we are looking for. We can save it into a file and check. Careful with the quotes, XML requires double quotes for attribute values.
 ```
 echo '<GDAL_WMS><Service name="TiledWMS"><ServerUrl>https://gibs.earthdata.nasa.gov/twms/epsg4326/best/twms.cgi?</ServerUrl><TiledGroupName>MODIS Terra CorrectedReflectance TrueColor tileset</TiledGroupName></Service></GDAL_WMS>' >MODIS_TERRA.xml
 gdalinfo MODIS_TERRA.xml
 ```
+
+The string can be used directly as a handle, the result will be the same:
+```
+gdalinfo '<GDAL_WMS><Service name="TiledWMS"><ServerUrl>https://gibs.earthdata.nasa.gov/twms/epsg4326/best/twms.cgi?</ServerUrl><TiledGroupName>MODIS Terra CorrectedReflectance TrueColor tileset</TiledGroupName></Service></GDAL_WMS>'
+```
+
+## Get the pixels
+
+Now that we have a handle, getting the data is easy with gdal_translate:
+```
+gdal_translate -of JPEG -outsize 2560 1280 MODIS_TERRA.xml MODIS_TERRA.jpg
+```
+It takes a few seconds and it's done. The parameters ask for the output to be a JPEG image and set the output size in pixels. The full resolution is too large to be saved in a single JPEG and would take a long time. The output image should look right, but will always have a large black area. That is because the default time is *now*, which in the MODIS case it means *today*. And since data for today is still being generated, only a part of the world will have data.
+
+## Choose the date
+
+GIBS specializes in providing temporal data. MODIS Terra has been operational for more than a dozen years and all the available data is in the GIBS server. Let's pick a random date, 2020-02-05, which is Feb 05 2020 in ISO 9601 notation, as required by the GIBS server. We can request any date using the same handle file:
+```
+gdal_translate -of JPEG -outsize 2560 1280 -oo Change=time:2020-02-05 MODIS_TERRA.xml MODIS_T_Feb_05_2020.jpg
+```
+That is pretty simple, right? The -oo means OpenOption, a way to pass a string to the tWMS driver. This will only work with *time*, because it has to match what the server can handle. Otherwise an error will occur.
+So we get a pretty picture, but how do we open a specific day in a GIS application, for example in Esri's ArcPro?
+
+## Save the date
+
+The solution is to copy the raster into a WMS type raster:
+```
+gdal_translate -of WMS -oo Change=time:2020-02-05 MODIS_TERRA.xml MODIS_T_Feb_05_2020.tWMS
+```
+This only works if the full tiledWMS input raster is directly copied into another tiledWMS raster. Otherwise a WMS format output file can't be generated. The size in pixels doesn't matter, since no pixels get copied, all we get is another XML handle to the GIBS dataset. Let's take a look at the content:
+```
+<GDAL_WMS>
+  <Service name="TiledWMS">
+    <ServerUrl>https://gibs.earthdata.nasa.gov/twms/epsg4326/best/twms.cgi?</ServerUrl>
+    <TiledGroupName>MODIS Terra CorrectedReflectance TrueColor tileset</TiledGroupName>
+    <Change Key="${time}">2020-02-05</Change>
+  </Service>
+</GDAL_WMS>
+```
+It makes sense, it is very similar to the MODIS_TERRA.xml, but tiledWMS stored the fact that the key ${time} has to be changed into 2020-02-05 when requesting data.
+We can test that it work from the command line, or we can open that file in any GDAL based GIS. In ArcPro, the tWMS is not recognized without some extra configuration steps, but it can be dragged and dropped into a map and it will work. Or just change the extension into something supported, like *.tif* for example.
+
+## Single handle for any dataset
+The TiledGroupName can also be fed as an open option. First, we have to create a XML hook that doesn't contain the TiledGroupName nor the Change.
+```
+echo '<GDAL_WMS><Service name="TiledWMS"><ServerUrl>https://gibs.earthdata.nasa.gov/twms/epsg4326/best/twms.cgi?</ServerUrl></Service></GDAL_WMS>' >GIBS_GCS.xml
+```
+Now we can generate XML handles for any dataset by name and specifying the time. Let's get the MODIS Aqua JPEG for the same day:
+```
+gdal_translate -of JPEG -outsize 2560 1280 -oo TiledGroupName="MODIS Aqua CorrectedReflectance TrueColor tileset" -oo Change=time:2020-02-05 GIBS_GCS.xml MODIS_A_Feb_05_2020.jpg
+```
+Of course, both parameters can be saved in a tWMS file, just like before:
+```
+gdal_translate -of WMS -oo TiledGroupName="MODIS Aqua CorrectedReflectance TrueColor tileset" -oo Change=time:2020-02-05 GIBS_GCS.xml MODIS_A_Feb_05_2020.tWMS
+```
+
+## Finding datasets easier
+
+The parameter to the TiledGroupName has to be an exact match to what the server declares, white spaces included, which makes it tricky. Fortunately, there is a way to find the exact string, using the WMSMetaDriver.
+Let's go back to the start:
+```
+gdalinfo "https://gibs.earthdata.nasa.gov/twms/epsg4326/best/twms.cgi?request=GetTileService"
+```
+That lists all the datasets. We can use the TiledGroupName open option with a prefix string to restrict the listed datasets. For example, to get all the tiled group names that contain the substring "MODIS TERRA", we can use:
+```
+gdalinfo -oo TiledGroupName="MODIR TERRA" "https://gibs.earthdata.nasa.gov/twms/epsg4326/best/twms.cgi?request=GetTileService"
+```
+That is a lot more manageable. The substring match is done case insensitive.
+
+## Use gdal_translate to generate hook files
+
+gdal_translate has a \-sds option where each subdataset is handled in sequence. This can be used to generate multiple hook files in a single command. So we can use the open options to restrict what gets generated. For example, generating all the hooks for patterns that contain the word infrared:
+```
+gdal_translate -oo TiledGroupName="infrared" "https://gibs.earthdata.nasa.gov/twms/epsg4326/best/twms.cgi?request=GetTileService" Infrared.tWMS
+```
+This will take a little while, and will generate a few files called Infrared_<N>.tWMS. It is not very efficient, since the output file is opened after creation, to verify that the file is valid. And each tiledWMS open has to fetch the GetTileService response from the server and parse it.
+
