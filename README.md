@@ -109,7 +109,7 @@ Let's go back to the start:
 ```
 That lists all the datasets. We can use the TiledGroupName open option with a prefix string to restrict the listed datasets. For example, to get all the tiled group names that contain the substring "MODIS TERRA", we can use:
 ```
-  gdalinfo -oo TiledGroupName="MODIR TERRA" "https://gibs.earthdata.nasa.gov/twms/epsg4326/best/twms.cgi?request=GetTileService"
+  gdalinfo -oo TiledGroupName="MODIS TERRA" "https://gibs.earthdata.nasa.gov/twms/epsg4326/best/twms.cgi?request=GetTileService"
 ```
 That is a lot more manageable. The substring match is done case insensitive.
 
