@@ -84,18 +84,19 @@ This only works if the full tiledWMS input raster is directly copied into anothe
 </GDAL_WMS>
 ```
 It makes sense, it is very similar to the MODIS_TERRA.xml, but tiledWMS stored the fact that the key ${time} has to be changed into 2020-02-05 when requesting data.
-We can test that it work from the command line, or we can open that file in any GDAL based GIS. In ArcPro, the tWMS is not recognized without some extra configuration steps, but it can be dragged and dropped into a map and it will work. Or just change the extension into something supported, like *.tif* for example.
+We can test that it work from the command line, or we can open that file in any GDAL based GIS. In ArcPro, the tWMS is not recognized without some extra configuration steps, but it can be dragged and dropped into a map and it will work. Or just change the extension into something supported, like *.tif* for example.  
+This file shows one of the main advantages of the tiledWMS over other GDAL WMS minidriver protocols. Only the minimum amount of information is stored in the handle file. No fiddling with bounding boxes, tile sizes, number of levels is required. Getting all that detail correct becomes the responsibility of the source server, much more friendly to the end user. All that is needed is the server URL, the name of the tiled group and optionally a set of parameter changes supported by the tiled group.
 
-## Single handle for any dataset
-The TiledGroupName can also be fed as an open option. First, we have to create a XML hook that doesn't contain the TiledGroupName nor the Change.
+## Single handle file for any dataset
+The TiledGroupName can also be fed as an open option. First, we have to create a XML handle file that doesn't contain the TiledGroupName nor the Change.
 ```
   echo '<GDAL_WMS><Service name="TiledWMS"><ServerUrl>https://gibs.earthdata.nasa.gov/twms/epsg4326/best/twms.cgi?</ServerUrl></Service></GDAL_WMS>' >GIBS_GCS.xml
 ```
-Now we can generate XML handles for any dataset by name and specifying the time. Let's get the MODIS Aqua JPEG for the same day:
+By itself, this is not a valid tWMS handle, since the required TiledGroupName is not provided. Yet it can be used to generate XML handles for any dataset by specifying the TiledGroupName and the time as parameters. Let's use it to generate the MODIS Aqua JPEG for the same day:
 ```
   gdal_translate -of JPEG -outsize 2560 1280 -oo TiledGroupName="MODIS Aqua CorrectedReflectance TrueColor tileset" -oo Change=time:2020-02-05 GIBS_GCS.xml MODIS_A_Feb_05_2020.jpg
 ```
-Of course, both parameters can be saved in a tWMS file, just like before:
+What we have is a single, very small handle file that can be used to connect to any GIBS dataset for any day! Of course, parameters can be saved in a tWMS file, just like before:
 ```
   gdal_translate -of WMS -oo TiledGroupName="MODIS Aqua CorrectedReflectance TrueColor tileset" -oo Change=time:2020-02-05 GIBS_GCS.xml MODIS_A_Feb_05_2020.tWMS
 ```
@@ -113,20 +114,20 @@ That lists all the datasets. We can use the TiledGroupName open option with a pr
 ```
 That is a lot more manageable. The substring match is done case insensitive.
 
-## Use gdal_translate to generate hook files
+## Use gdal_translate to generate handle files
 
-gdal_translate has a \-sds option where each subdataset is handled in sequence. This can be used to generate multiple hook files in a single command. So we can use the open options to restrict what gets generated. For example, generating all the hooks for patterns that contain the word infrared:
+gdal_translate has a \-sds option where each subdataset of the input is copied, in sequence. This can be used to generate multiple handle files in a single command. We can use the open options to restrict which gets generated. For example, this generates all the handle files for patterns that contain the word infrared:
 ```
   gdal_translate -of WMS -sds -oo TiledGroupName="infrared" -oo Change=time:2019-10-21 "https://gibs.earthdata.nasa.gov/twms/epsg4326/best/twms.cgi?request=GetTileService" Infrared.tWMS
 ```
-This will take a little while, and will generate a few files called Infrared_<N>.tWMS. It is not very efficient, since the output file is opened after creation, to verify that the file is valid. And each tiledWMS open has to fetch the GetTileService response from the server and parse it. Using gdalinfo, we can check what group name is in which file and that the time was captured, by looking at the metadata:
+This will generate a couple of files called Infrared_<N>.tWMS. It is not very efficient, since the output is opened aright fter creation, to verify that the file is valid. And each tiledWMS open has to fetch the GetTileService response from the server and parse it. If the TiledGroupName option was not used to limit the number of outputs, this can take quite a long time. Using gdalinfo, we can check what group name is in which file and that the time was captured, by looking at the metadata:
 ```
   gdalinfo Infrared_1.tWMS
 ```
   
 ## Eliminating the GetTileService request
-It takes a few seconds for the GIBS server to reply to the GetTileService request. If multiple tiledWMS files are opened, this can be an unacceptable delay. This delay can be eliminated by storing the GetTileService response in the tWMS hook file. From the command line only one method is available, which stores the file inside the tWMS hook file itself. For example, we can modify the previous command and use:
+It takes a few seconds for the GIBS server to reply to the GetTileService request, and all that XML content to get parsed. If multiple tiledWMS files are opened, this can be an unacceptable delay. This delay can be reduced or eliminated by storing the GetTileService response in the tWMS hook file, operation triggered by the StoreConfiguration open option. From the command line only one method is available, which stores the file inside the tWMS hook file itself. For example, we can modify the previous command and use:
 ```
 gdal_translate -of WMS -sds -oo StoreConfiguration=yes -oo TiledGroupName="infrared" -oo Change=time:2019-10-21 "https://gibs.earthdata.nasa.gov/twms/epsg4326/best/twms.cgi?request=GetTileService" Infrared.tWMS
 ```
-The generated files are a lot larger because they contain the XML encoded response to the GetTileService. But they might work faster, because the GetTileService information does not have to be retrieved from the server when opening the file.
+The generated files are a lot larger because they contain the XML encoded response to the GetTileService. But they might work faster, because the GetTileService information does not have to be retrieved from the server when opening the file. Since the raster configuration details are no longer controlled by the server, such self-configured tWMS files might break when server changes occur.
