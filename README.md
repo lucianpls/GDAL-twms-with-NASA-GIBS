@@ -6,7 +6,7 @@
 # GDAL-twms-with-NASA-GIBS
 How to make use of the NASA/GIBS services using GDAL and the tWMS client
 
-## Introduction
+## GIBS, GDAL WMS and tiledWMS
 [GIBS](https://earthdata.nasa.gov/eosdis/science-system-description/eosdis-components/gibs) is a component of the NASA Earth Observation System Data and Information System (EOSDIS) which provides online access to current and historical imagery derived from multiple satellite sources. The core web service is tiled, which means that response is fast and that it is not necessary to download a complete dataset if the area of interest is only a small region.  
 [GDAL](https://gdal.org/) is a well known geospatial data access library which is part of most GIS applications. GDAL can read (and sometimes write) geospatial raster and vector data in many formats, the format specific operations being handled by a GDAL driver.  
 
