@@ -17,7 +17,8 @@ One of these WMS-minidrivers is TiledWMS (tWMS), which is a tiled extension for 
 
 ## Getting a list of the available datasets
 
-TiledWMS adds a *GetTileService* call to the OGC WMS, the XML document returned is what contains all the information needed to configure and connect to any dataset. As documented by the GIBS API page, the GIBS server URL for this request is [https://gibs.earthdata.nasa.gov/twms/epsg4326/best/twms.cgi?request=GetTileService](https://gibs.earthdata.nasa.gov/twms/epsg4326/best/twms.cgi?request=GetTileService)  
+TiledWMS adds a *GetTileService* call to the OGC WMS, the XML document returned is what contains all the information needed to configure and connect to any dataset.
+GIBS organizes the datasets by projection, each projection having it's own URL. As documented by the GIBS API page, the *GetTileService* request for datasets in GCS is [https://gibs.earthdata.nasa.gov/twms/epsg4326/best/twms.cgi?request=GetTileService](https://gibs.earthdata.nasa.gov/twms/epsg4326/best/twms.cgi?request=GetTileService)  
 This URL can be used by gdalinfo to get a list of available datasets:
 ```
   gdalinfo "https://gibs.earthdata.nasa.gov/twms/epsg4326/best/twms.cgi?request=GetTileService"
