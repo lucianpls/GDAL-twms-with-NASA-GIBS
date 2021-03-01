@@ -15,7 +15,7 @@ GDAL WMS has a common part that handles interfacing with GDAL, making the reques
 
 One of these WMS-minidrivers is TiledWMS (tWMS), which is a tiled extension for the OGC WMS. The tWMS minidriver lets the server provide the information needed to connect, greatly simplifying the end user task of building the WMS file. tiledWMS is one of the offered [GIBS APIs](https://wiki.earthdata.nasa.gov/display/GIBS/GIBS+API+for+Developers#GIBSAPIforDevelopers-TiledWebMapService(TWMS)), and as such can be used to simplify access to the GIBS data. The rest of this document will mostly use the GDAL command line tools such as [gdalinfo](https://gdal.org/programs/gdalinfo.html) and [gdal_translate](https://gdal.org/programs/gdal_translate.html) to simplify the access to the tiledWMS driver. However, once a valid tiledWMS XML configuration file is generated, the dataset it represents can be used by any application that uses GDAL.
 
-## List of available datasets
+## Getting a list of the available datasets
 
 TiledWMS adds a *GetTileService* call to the OGC WMS, the XML document returned is what contains all the information needed to configure and connect to any dataset. As documented by the GIBS API page, the GIBS server URL for this request is [https://gibs.earthdata.nasa.gov/twms/epsg4326/best/twms.cgi?request=GetTileService](https://gibs.earthdata.nasa.gov/twms/epsg4326/best/twms.cgi?request=GetTileService)  
 This URL can be used by gdalinfo to get a list of available datasets:
