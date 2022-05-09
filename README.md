@@ -1,8 +1,4 @@
 
-# WARNING
-
-**This information is preliminary, this functionality is not yet present in GDAL**
-
 # GDAL-twms-with-NASA-GIBS
 How to make use of the NASA/GIBS services using GDAL and the tWMS client
 
